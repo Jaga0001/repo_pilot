@@ -1,0 +1,18 @@
+analyze_logs_task:
+  description: >
+    Analyze the following CI/CD log output and identify the root cause of the failure.
+    Look for error messages, stack traces, dependency issues, and any other indicators.
+    Log output: {log_output}
+  expected_output: >
+    A detailed analysis containing the root cause of the failure,
+    the relevant error messages, and the affected components.
+  agent: log_analyzer
+
+suggest_fix_task:
+  description: >
+    Based on the log analysis, suggest precise fixes for the CI/CD failure.
+    Provide step-by-step instructions that a developer can follow to resolve the issue.
+  expected_output: >
+    A list of actionable fix suggestions with step-by-step instructions,
+    ordered by likelihood of resolving the issue.
+  agent: fix_suggester
