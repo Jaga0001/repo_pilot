@@ -16,3 +16,12 @@ suggest_fix_task:
     A list of actionable fix suggestions with step-by-step instructions,
     ordered by likelihood of resolving the issue.
   agent: fix_suggester
+
+create_pr_task:
+  description: >
+    Create a GitHub PR description using the fix suggestions.
+    Write a professional PR description based on the analysis and fixes provided.
+    {fix_context}
+  expected_output: >
+    Professional PR description ready for creating a GitHub Pull Request
+  agent: pr_creator

@@ -1,5 +1,5 @@
 from elasticsearch import Elasticsearch
-from app.config import ELASTIC_URL, ELASTIC_INDEX, ELASTIC_API_KEY
+from config import ELASTIC_URL, ELASTIC_INDEX, ELASTIC_API_KEY
 
 
 class ElasticsearchService:

@@ -19,3 +19,14 @@ fix_suggester:
     fix instructions for CI/CD pipeline errors.
   verbose: true
   allow_delegation: false
+
+pr_creator:
+  role: >
+    GitHub PR Creator
+  goal: >
+    Create GitHub Pull Request with the fix
+  backstory: >
+    You are a DevOps automation expert responsible
+    for creating PRs to fix CI/CD failures.
+  verbose: true
+  allow_delegation: false
