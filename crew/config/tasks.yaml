@@ -1,27 +1,58 @@
-analyze_logs_task:
+analyze_error_task:
   description: >
-    Analyze the following CI/CD log output and identify the root cause of the failure.
-    Look for error messages, stack traces, dependency issues, and any other indicators.
-    Log output: {log_output}
-  expected_output: >
-    A detailed analysis containing the root cause of the failure,
-    the relevant error messages, and the affected components.
-  agent: log_analyzer
+    Analyze the following CI/CD pipeline failure and identify the root cause.
 
-suggest_fix_task:
-  description: >
-    Based on the log analysis, suggest precise fixes for the CI/CD failure.
-    Provide step-by-step instructions that a developer can follow to resolve the issue.
-  expected_output: >
-    A list of actionable fix suggestions with step-by-step instructions,
-    ordered by likelihood of resolving the issue.
-  agent: fix_suggester
+    **Repository:** {repo_name}
 
-create_pr_task:
-  description: >
-    Create a GitHub PR description using the fix suggestions.
-    Write a professional PR description based on the analysis and fixes provided.
-    {fix_context}
+    **CI/CD Logs:**
+    {ci_logs}
+
+    **Repository file tree:**
+    {file_tree}
+
+    **Source code:**
+    {source_code}
+
+    **Similar past fixes from knowledge base:**
+    {past_fixes}
+
+    Your analysis MUST include:
+    1. The exact error message(s) from the logs
+    2. The root cause of the failure
+    3. Which file(s) need to be changed and why
+    4. The specific changes required in each file
+    5. If any past fixes are relevant, reference them and explain how
+       they apply to the current failure
   expected_output: >
-    Professional PR description ready for creating a GitHub Pull Request
-  agent: pr_creator
+    A structured analysis containing the exact error messages, root cause
+    explanation, the list of affected files, and a description of the fix
+    needed for each file. Mention any relevant past fixes that informed
+    the analysis.
+  agent: error_analyzer
+
+fix_code_task:
+  description: >
+    Based on the error analysis, produce the actual fixed source code.
+
+    If the analysis mentions similar past fixes, use them as a guide to
+    produce the correct fix faster and more accurately.
+
+    For EACH file that needs changes, output the COMPLETE fixed file
+    content using this exact delimited format:
+
+    ===FILE: path/to/file.ext===
+    <complete file content with the fix applied>
+    ===END FILE===
+
+    RULES:
+    - Output the FULL file content, not just the changed lines.
+    - Use the exact file paths as they appear in the repository.
+    - Fix ONLY what is broken — do not introduce unrelated changes.
+    - Make sure the code is syntactically correct after the fix.
+    - If a CI config file (e.g. .github/workflows/*.yml) needs changes,
+      include it as well.
+  expected_output: >
+    One or more file blocks in the ===FILE: path=== / ===END FILE===
+    format, each containing the complete fixed file content ready to be
+    committed to the repository.
+  agent: code_fixer
