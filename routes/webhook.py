@@ -344,41 +344,72 @@ async def handle_webhook(request: Request, background_tasks: BackgroundTasks):
     signature = request.headers.get("X-Hub-Signature-256")
 
     if not verify_signature(body, signature):
-        raise HTTPException(status_code= 401, detail="Invalid webhook signature")
+        raise HTTPException(status_code=401, detail="Invalid webhook signature")
 
     data = json.loads(body)
     event_type = request.headers.get("X-GitHub-Event", "unknown")
     logger.info("Received GitHub event: %s", event_type)
 
-    # ── Gate: only act on push events ────────────────────────────────
-    if event_type != "push":
+    # ── Handle push events ───────────────────────────────────────────
+    if event_type == "push":
+        # Extract push details
+        repo_obj = data.get("repository", {})
+        repo = repo_obj.get("full_name", "")
+        head_sha = data.get("after", "")
+        ref = data.get("ref", "")  # e.g. "refs/heads/main"
+        branch = ref.removeprefix("refs/heads/")
+        pusher = data.get("pusher", {}).get("name", "unknown")
+
+        if not repo or not head_sha:
+            raise HTTPException(
+                status_code=400,
+                detail="Could not extract repository or commit SHA from push payload",
+            )
+
+        # Ignore branch deletions (head_sha is all zeros)
+        if head_sha == "0" * 40:
+            return {"status": "skipped", "reason": "Branch deletion — ignoring"}
+
+        # Schedule the pipeline in the background
+        background_tasks.add_task(process_push, repo, head_sha, branch, pusher)
+
         return {
-            "status": "skipped",
-            "reason": f"Event '{event_type}' is not a push — ignoring",
+            "status": "accepted",
+            "message": f"Push on {repo} ({head_sha[:7]}) received — CI will be monitored",
         }
 
-    # Extract push details
-    repo_obj = data.get("repository", {})
-    repo = repo_obj.get("full_name", "")
-    head_sha = data.get("after", "")
-    ref = data.get("ref", "")                     # e.g. "refs/heads/main"
-    branch = ref.removeprefix("refs/heads/")
-    pusher = data.get("pusher", {}).get("name", "unknown")
+    # ── Handle check_suite events ────────────────────────────────────
+    elif event_type == "check_suite":
+        action = data.get("action", "")
+        if action not in {"completed", "requested"}:
+            return {
+                "status": "skipped",
+                "reason": f"Check suite action '{action}' is not relevant — ignoring",
+            }
 
-    if not repo or not head_sha:
-        raise HTTPException(
-            status_code=400,
-            detail="Could not extract repository or commit SHA from push payload",
-        )
+        repo_obj = data.get("repository", {})
+        repo = repo_obj.get("full_name", "")
+        head_sha = data.get("check_suite", {}).get("head_sha", "")
+        branch = data.get("check_suite", {}).get("head_branch", "")
+        pusher = data.get("sender", {}).get("login", "unknown")
 
-    # Ignore branch deletions (head_sha is all zeros)
-    if head_sha == "0" * 40:
-        return {"status": "skipped", "reason": "Branch deletion — ignoring"}
+        if not repo or not head_sha:
+            raise HTTPException(
+                status_code=400,
+                detail="Could not extract repository or commit SHA from check_suite payload",
+            )
 
-    # Schedule the pipeline in the background
-    background_tasks.add_task(process_push, repo, head_sha, branch, pusher)
+        # Schedule the pipeline in the background
+        background_tasks.add_task(process_push, repo, head_sha, branch, pusher)
 
-    return {
-        "status": "accepted",
-        "message": f"Push on {repo} ({head_sha[:7]}) received — CI will be monitored",
-    }
+        return {
+            "status": "accepted",
+            "message": f"Check suite on {repo} ({head_sha[:7]}) received — CI will be monitored",
+        }
+
+    # ── Ignore other events ──────────────────────────────────────────
+    else:
+        return {
+            "status": "skipped",
+            "reason": f"Event '{event_type}' is not handled — ignoring",
+        }
