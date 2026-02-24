@@ -8,8 +8,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 @CrewBase
-class SageCrew():
-    """Sage crew — analyses CI/CD failures and produces code fixes."""
+class RepoPilotCrew():
+    """RepoPilot crew — analyses CI/CD failures and produces code fixes."""
 
     agents: List[BaseAgent]
     tasks: List[Task]

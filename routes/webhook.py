@@ -8,7 +8,7 @@ import requests
 from fastapi import APIRouter, Request, HTTPException, BackgroundTasks
 from services.github_service import GitHubService
 from services.es_service import ElasticsearchService
-from crew.crew import SageCrew
+from crew.crew import RepoPilotCrew
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -193,7 +193,7 @@ def process_push(repo: str, head_sha: str, branch: str, pusher: str):
     }
 
     try:
-        result = SageCrew().crew().kickoff(inputs=inputs)
+        result = RepoPilotCrew().crew().kickoff(inputs=inputs)
     except Exception as exc:
         logger.error("Crew execution failed for %s: %s", head_sha[:7], exc)
         return
@@ -297,7 +297,7 @@ def _close_stale_fix_prs(repo: str, branch: str, reason: str):
             comment_url = f"https://api.github.com/repos/{repo}/issues/{pr_number}/comments"
             requests.post(
                 comment_url,
-                json={"body": f"🤖 **Sage Agent:** Closing this PR — {reason}."},
+                json={"body": f"🤖 **RepoPilot Agent:** Closing this PR — {reason}."},
                 headers=github.headers,
             )
             # Close PR
@@ -322,7 +322,7 @@ def _comment_on_existing_pr(repo: str, pr: dict, head_sha: str, failed_runs: lis
         f"[{r['name']}]({r['html_url']})" for r in failed_runs
     )
     body = (
-        f"🤖 **Sage Agent:** CI failed again on commit `{head_sha[:7]}`.\n\n"
+        f"🤖 **RepoPilot Agent:** CI failed again on commit `{head_sha[:7]}`.\n\n"
         f"**Failed runs:** {run_summary}\n\n"
         f"A fix PR already exists here — please review and merge it, "
         f"or close it so the agent can create a new one."

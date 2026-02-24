@@ -9,7 +9,7 @@ logging.basicConfig(
 )
 
 app = FastAPI(
-    title="Sage — CI/CD AI Fix Agent",
+    title="RepoPilot — CI/CD AI Fix Agent",
     version="1.0.0",
     description="Receives CI/CD failure webhooks, analyses the error, fixes the code, and opens a PR.",
 )
@@ -20,7 +20,7 @@ app.include_router(webhook_router)
 
 @app.get("/")
 def root():
-    return {"message": "Sage CI/CD AI Agent is running"}
+    return {"message": "RepoPilot CI/CD AI Agent is running"}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

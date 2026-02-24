@@ -2317,7 +2317,7 @@ wheels = [
 ]
 
 [[package]]
-name = "sage"
+name = "repopilot"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
