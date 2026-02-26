@@ -5,6 +5,7 @@ import hmac
 import hashlib
 import os
 import requests
+import time
 from fastapi import APIRouter, Request, HTTPException, BackgroundTasks
 from services.github_service import GitHubService
 from services.es_service import ElasticsearchService
@@ -287,6 +288,9 @@ def process_push(repo: str, head_sha: str, branch: str, pusher: str):
 
 def _close_stale_fix_prs(repo: str, branch: str, reason: str):
     """Close all open fix/ci-* PRs and leave a comment explaining why."""
+    logger.info("Waiting for 60 minutes before closing stale PRs...")
+    time.sleep(3600)  # Wait for 60 minutes
+
     github = GitHubService.for_repo(repo)
     default_branch = github.get_default_branch(repo)
     open_prs = github.get_open_fix_prs(repo, base=default_branch)
