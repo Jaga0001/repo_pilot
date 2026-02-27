@@ -136,7 +136,7 @@ Pull requests and issues are welcome!
 
 ## Contact
 
-For support or questions, contact your-email@domain.com.
+For support or questions, contact jagavanthaarukumar@gmail.com
 
 ---
 
